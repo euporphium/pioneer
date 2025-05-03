@@ -1,0 +1,14 @@
+services:
+  dash:
+    image: mauricenino/dashdot:latest
+    restart: unless-stopped
+    privileged: true
+    networks:
+      - dash_proxy
+    volumes:
+      - /:/mnt/host:ro
+
+networks:
+  dash_proxy:
+    name: dash_proxy
+    external: true
