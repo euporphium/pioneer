@@ -23,6 +23,17 @@ services:
     volumes:
       - commafeed_postgresql:/var/lib/postgresql/data
 
+  commafeed_postgresql_backup:
+    image: offen/docker-volume-backup:v2
+    restart: unless-stopped
+    environment:
+      BACKUP_CRON_EXPRESSION: "${BACKUP_CRON_EXPRESSION}"
+      BACKUP_RETENTION_DAYS: "${BACKUP_RETENTION_DAYS}"
+      BACKUP_FILENAME: "${BACKUP_FILENAME}"
+    volumes:
+      - commafeed_postgresql:/backup/source:ro
+      - ${BACKUP_DIRECTORY}:/backup/dest # Local backup destination
+
 volumes:
   commafeed_postgresql:
 
