@@ -1,0 +1,58 @@
+services:
+  server:
+    image: woodpeckerci/woodpecker-server:v3
+    restart: unless-stopped
+    ports:
+      - 25316:8000
+    networks:
+      - ci-network
+    volumes:
+      - server-data:/var/lib/woodpecker/
+    environment:
+      - WOODPECKER_OPEN=true
+      - WOODPECKER_HOST=${WOODPECKER_HOST}
+      - WOODPECKER_GITHUB=true
+      - WOODPECKER_GITHUB_CLIENT=${WOODPECKER_GITHUB_CLIENT}
+      - WOODPECKER_GITHUB_SECRET=${WOODPECKER_GITHUB_SECRET}
+      - WOODPECKER_AGENT_SECRET=${WOODPECKER_AGENT_SECRET}
+
+  agent:
+    image: woodpeckerci/woodpecker-agent:v3
+    restart: unless-stopped
+    depends_on:
+      - server
+    networks:
+      - ci-network
+      - proxy
+    volumes:
+      - agent-config:/etc/woodpecker
+    environment:
+      - DOCKER_HOST=tcp://docker-socket-proxy:2375
+      - WOODPECKER_SERVER=server:9000
+      - WOODPECKER_AGENT_SECRET=${WOODPECKER_AGENT_SECRET}
+
+  docker-socket-proxy:
+    image: tecnativa/docker-socket-proxy:latest
+    restart: unless-stopped
+    networks:
+      - proxy
+    environment:
+      - CONTAINERS=1
+      - IMAGES=1
+      - INFO=1
+      - NETWORKS=1
+      - VOLUMES=1
+      - POST=1
+      - DELETE=1
+      - PUT=1
+      - PATCH=1
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock # (Cannot be mounted as read-only)
+
+networks:
+  ci-network:
+  proxy:
+
+volumes:
+  server-data:
+  agent-config:
